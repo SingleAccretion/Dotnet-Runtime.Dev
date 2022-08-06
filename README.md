@@ -13,11 +13,12 @@ Note: throughout this document, `$REPO_ROOT` will refer to the directory into wh
 1) [Powershell 7+](https://github.com/PowerShell/PowerShell).
 2) [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) and [all other prerequisites for bulding dotnet/runtime](https://github.com/dotnet/runtime/blob/main/docs/workflow/requirements/windows-requirements.md).
 3) [Cygwin](https://www.cygwin.com/), for building PIN.
-4) The following environment variables:
+4) Fully built https://github.com/dotnet/jitutils.
+5) The following environment variables:
    - `SUPERPMI_CACHE_DIRECTORY` = `$REPO_ROOT/diffs/spmi`.
-   - `PATH` should include `$REPO_ROOT/diffs`.
-5) A remote (GH) fork of `dotnet/runtime`.
-6) TODO: document things required for working with the RyuJit-LLVM runtimelab branch.
+   - `PATH` should include `$REPO_ROOT/diffs` and `jitutils/bin`.
+6) A remote (GH) fork of `dotnet/runtime`.
+7) TODO: document things required for working with the RyuJit-LLVM runtimelab branch.
 
 #### Setup
 
@@ -94,3 +95,20 @@ Parameters:
 7) `-cg2`: whether to update the CG2 custom core root. Note this is off by default.
 8) `-pgo`: whether to apply native PGO to the built Jits. By default, `Release` Jits are built with PGO off, to make PIN diffs reliable.
 9) `-stats`: the list of "stats" to build the Jits with. See the above notes on `build-jit-with-stats-defined.ps1`.
+
+### "Diff" scripts
+
+#### `diff-dasm.ps1` - view the diffs between SPMI-generated assembly and/or JitDump files
+
+This is the primary script for working with SPMI-generated diffs. It is intended to be invoked in the directory created by `superpmi.py` (e. g. `C:\Users\Accretion\source\dotnet\diffs\spmi\asm.libraries.pmi.windows.x64.checked.44`). Note that most of the parameters to the script can be shortened per the standard PowerShell rules (e. g. `-log` => `-l`, `-wordDiff` => `-w`, `-basediffs` => `-b`, etc).
+
+Parameters:
+1) `-spmiIndex` (positional): the SPMI index for the diff of interest. This is the only required parameter, and in absense of any others, it makes the script equivalent to invoking `git diff --no-index base/spmiIndex.dasm diff/spmiIndex.dasm`.
+2) `-perfScore`: a shortcut for `jit-analyze -b base -d diff -metric PerfScore`.
+3) `-log`: whether to re-invoke SPMI on the provided diff and generate dump files for the base and diff, to be `git diff`ed. Note the script supports invocations without `-spmiIndex` in case `-log` was specificed, making it equivalent to `git diff --no-index baselog.cs log.cs`. This is useful when analyzing large dumps, where regenerating them is relatively expensive.
+4) `-native`: whether to use "native" cross-compilers when invoking SPMI. By default, the script will prefer `x86`-hosted compilers for all `x86` and `ARM` diffs.
+5) `-basediffs`: whether to use the "base Jit" with SPMI.
+6) `-asm`: whether to re-invoke SPMI on the provided diff and generate `.dasm` files for the base and diff. Useful for verifying changes have the intended impact on the diff (note, as with `-log`, that the script creates the new `.dasm` files in the current directory, and does not overwite the originals).
+7) `-wordDiff`: whether to use `--word-diff` in `git diff` invocations. Useful for diffing dump files, where changes to tree IDs can make ordinary `git diff` too noisy.
+8) `-options`: an array of Jit options to provide to compilers invoked by SPMI. For example: `-o JitNoCSE=1, JitNoInline=1`. Exceptionally useful for verifying causes of diffs in conjuction with various `No` knobs.
+
