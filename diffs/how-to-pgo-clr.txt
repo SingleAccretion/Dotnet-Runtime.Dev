@@ -1,0 +1,5 @@
+1) build-runtime.cmd and build.cmd have: -pgoinstrument. This builds a version of CLR suitable for instrumentation.
+2) Now a scenario needs to be run, it will generate a clrjit.pdc file in the directory of the executable/library (by default).
+3) A .pgd file in the artifacts directory (under Windows.x64.Release/PGD) now needs to be merged with the .pdc file via "pgomgr /merge clrjit.pgd".
+4) THis file needs to be placed under "<path>/data".
+4) Finally, "./build-runtime release -component jit -pgodatapath <path>" will build the Jit with this PGO data. Yay!

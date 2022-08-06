@@ -1,0 +1,3 @@
+public ref class CppCliClass
+{
+};
