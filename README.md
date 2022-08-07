@@ -35,7 +35,7 @@ Note: throughout this document, `$REPO_ROOT` will refer to the directory into wh
 
 ### "Build" scripts
 
-#### `build-jit-with-stats-defined.ps1` - build the Jits capable of measuring certain "stat"
+#### `build-jit-with-stats-defined.ps1` - build the Jits capable of measuring a certain "stat"
 
 This is mostly an infrastructural script, but can also be used directly. It allows building compilers with a number of `#define`s that control various interesting dumping capabilities.
 
@@ -43,7 +43,7 @@ Parameters:
 1) `-base`: the Jits should be built out of `runtime-base`.
 2) `-save`: whether the state of the source repository should be restored after the Jits have been built (otherwise `clrjit` artifacts will be overwritten). When this option is used, the built Jits will be placed under `build/[Base]CustomJits`.
 3) `-jitSubset`: `clr.jit` or `clr.alljits`.
-4) `-arch`: `x64` or `x86` (the host arch of the built compilers).
+4) `-arch`: the host architecture of the built compilers, `x64` or `x86`.
 5) `-config`: the configuration (`Debug`/`Checked`/`Release`).
 6) `-stats`: which "stats" to "define". See the script source for how they correspond to `#define`s in `jit.h`.
 
@@ -59,16 +59,16 @@ Parameters:
 
 #### `save-base-jits.ps1` - "save" the currently built Jits
 
-A number of scripts support overriding the "base" Jit (which is usually the one built out of `runtime-base`) with a custom one, placed under `diffs/base-jits-[x64|x86]` by this script.
+A number of scripts support overriding the base Jit (which is usually the one built out of `runtime-base`) with a custom one, placed under `diffs/base-jits-[x64|x86]` by this script.
 
 Parameters:
 1) `-hostArch`: the architecture of the Jits to copy. Default is `x64`.
 2) `-config`: the configuration of the Jits to copy. Default is `Checked`.
-3) `-builtJitsPath`: the path to the Jits to copy. By default, the script copies the Jit from `runtime`'s artifacts.
+3) `-builtJitsPath`: path to the Jits to copy. By default, the script copies the Jits from `runtime`'s artifacts.
 
 #### `update-custom-core-root.ps1` - update the custom core roots
 
-Copies artifacts from the built repositories to "custom" core root repositories. "Custom" core roots differ slightly in their construction from the ones created by the test build script, in particular, they are set up such that the runtime copied is `Checked`, while the Jits are `Debug`, for ease of debugging, and the `crossgen2` pseudo-custom core root employs a renaming trick so that the Jit compiling CG2 in its process has a name different than the one used by CG2 itself.
+Copies artifacts from the built repositories to "custom" core roots. These differ slightly in their construction from the ones created by the test build script, in particular, they are set up such that the runtime copied is `Checked`, while the Jits are `Debug`, for ease of debugging, and the `crossgen2` custom core root employs a renaming trick so that the Jit compiling CG2 in its process has a name different than the one used by CG2 itself.
 
 Parameters:
 1) `-arch`: the architecure of the core root. Default is `x64`.
@@ -76,21 +76,21 @@ Parameters:
 3) `-ilc`: whether to update the ILC core root. Note this refers to the RyuJit-LLVM runtimelab branch. Off by default.
 4) `-mono`: whether to update the Mono core root (CoreCLR core root with the runtime binaries replaced with their Mono equivalents). Off by default.
 
-#### `update-jit.ps1` - "update" the Jit in the custom core root
+#### `update-jit.ps1` - update the Jits in custom core roots
 
 Builds and copies the Jits from `runtime`'s artifacts to their location in the custom core root(s). This is the workhorse script in the workflow, it is expected to be used alongside editing the source code, to test the resulting binaries.
 
 Parameters:
-1) `-hostArch`: the architercture of the Jits to build. Default is `x64`.
+1) `-hostArch|-a`: the architercture of the Jits to build. Default is `x64`.
 2) `-all`: whether to build "all" of the Jits (i. e. `clr.alljits`). By default, only the `clr.jit` subset is built.
 3) `-release|-r`: whether to build the Jits in `Release` configuration. By default, `Checked` and `Debug` Jits are built.
 4) `-refreshPdb|-p`: whether to regenerate the PDB files from scratch during the build. By default, the incremental build "appends" debugging information to the existing files, which can cause confusion in certain scenarios.
-5) `-updateBaseJits|-b`: whether to make the built Jits "base" (copy them to the "base Jits" directory with `save-base-jits.ps1`). This is a very useful option when the "base" being diffed against (say, via SPMI) is not the same as the `HEAD` of `runtime-base` (which is intended to always be in sync with the `HEAD` of the remote fork and be updated infrequently). In such a case, the common sequence of actions to perform is the following:
+5) `-updateBaseJits|-b`: whether to make the built Jits "base" (copy them to the "base Jits" directory with `save-base-jits.ps1`). This is a very useful option when the "base" being diffed against (say, via SPMI) is not the same as the `HEAD` of `runtime-base` (which is intended to always be in sync with the `HEAD` of the remote fork and only infrequently updated). In such a case, the common sequence of actions to perform is the following:
    - `git rebase main -i` and `break` after the intended "base" commit.
    - `update-jit -b [-all]`
    - `git rebase --continue`
    - `update-jit [-all]`
-   - Run `diff-mem`, `pin`, `spmi`, etc.
+   - Run `diff-mem.ps1`, `pin.ps1`, `spmi.ps1`, etc.
 6) `-llvmRyuJit`: whether to build and update the Jit associated with the RyuJit-LLVM runtimelab branch.
 7) `-cg2`: whether to update the CG2 custom core root. Note this is off by default.
 8) `-pgo`: whether to apply native PGO to the built Jits. By default, `Release` Jits are built with PGO off, to make PIN diffs reliable.
@@ -103,30 +103,30 @@ Parameters:
 This is the primary script for working with SPMI-generated diffs. It is intended to be invoked in the directory created by `superpmi.py` (e. g. `C:\Users\Accretion\source\dotnet\diffs\spmi\asm.libraries.pmi.windows.x64.checked.44`). Note that most of the parameters to the script can be shortened per the standard PowerShell rules (e. g. `-log` => `-l`, `-wordDiff` => `-w`, `-basediffs` => `-b`, etc).
 
 Parameters:
-1) `-spmiIndex` (positional): the SPMI index for the diff of interest. This is the only required parameter, and in absense of any others, it makes the script equivalent to invoking `git diff --no-index base/spmiIndex.dasm diff/spmiIndex.dasm`.
+1) `-spmiIndex` (positional): the SPMI context index. This is the only required parameter, and in absense of any others, it makes the script equivalent to invoking `git diff --no-index base/spmiIndex.dasm diff/spmiIndex.dasm`.
 2) `-perfScore`: a shortcut for `jit-analyze -b base -d diff -metric PerfScore`.
-3) `-log`: whether to re-invoke SPMI on the provided diff and generate dump files for the base and diff, to be `git diff`ed. Note the script supports invocations without `-spmiIndex` in case `-log` was specificed, making it equivalent to `git diff --no-index baselog.cs log.cs`. This is useful when analyzing large dumps, where regenerating them is relatively expensive.
+3) `-log`: whether to re-invoke SPMI on the provided diff and generate dump files, to be `git diff`ed. Note that the script supports invocations without `-spmiIndex` in case `-log` was specificed, making it equivalent to `git diff --no-index baselog.cs log.cs`. This is useful when analyzing large dumps, where regenerating them is relatively expensive.
 4) `-native`: whether to use "native" cross-compilers when invoking SPMI. By default, the script will prefer `x86`-hosted compilers for all `x86` and `ARM` diffs.
 5) `-basediffs`: whether to use the "base" Jit with SPMI.
-6) `-asm`: whether to re-invoke SPMI on the provided diff and generate `.dasm` files for the base and diff. Useful for verifying changes have the intended impact on the diff (note, as with `-log`, that the script creates the new `.dasm` files in the current directory, and does not overwite the originals).
+6) `-asm`: whether to re-invoke SPMI on the provided diff and generate `.dasm` files. Useful for verifying changes have the intended impact on the diff (note, as with `-log`, that the script creates the new `.dasm` files in the current directory, and does not overwite the originals).
 7) `-wordDiff`: whether to use `--word-diff` in `git diff` invocations. Useful for diffing dump files, where changes to tree IDs can make ordinary `git diff` too noisy.
-8) `-options`: an array of Jit options to provide to compilers invoked by SPMI. For example: `-o JitNoCSE=1, JitNoInline=1`. Exceptionally useful for verifying causes of diffs in conjuction with various `No` knobs.
+8) `-options`: an array of Jit options to provide to compilers invoked by SPMI. For example: `-o JitNoCSE=1, JitNoInline=1`. Exceptionally useful for verifying causes of diffs in conjuction with various `JitNo` knobs.
 
 #### `diff-mem.ps1` - diff the memory consumption
 
-As the name suggests, the script is intended for quick and simple verification of changes that could impact memory consumption of the Jit. Currently, it only supports diffs with CoreLib compiled via CG2. This script relies on "custom base Jits mem stats" being present under the `build` directory.
+As the name suggests, the script is intended for quick and simple verification of changes that could impact memory consumption of the Jit. Currently, it only supports diffs with CoreLib compiled via CG2. This script relies on base Jits capable of measuring memory stats being present under the `build` directory.
 
 Parameters:
 1) RID and host arch (positional): what host/target combination should be used for the diffs. The "RID" is a standard .NET RID (e. g. `win-x64`, `linux-arm`, etc), while the host arch can be one of `x86` or `x64`. Default is `win-x64 x64`.
-2) `basediffs (positional): whether to use "the base Jit" for the diff.
+2) `basediffs (positional): whether to use the "base" Jit for the diff.
 
-#### `fmt.ps1` - apply the "Jit formatting patch"
+#### `fmt.ps1` - apply the Jit formatting patch
 
 This script downloads and applies the formatting patch generated by the AzDo jobs that run on Jit changes.
 
 Parameters:
 1) `-download` (positional): the build ID for the formatting job. It is intended to be extracted from the URL, e. g.: https://dev.azure.com/dnceng/public/_build/results?__buildId=1927902__&view=logs&jobId=c8204876-824e-5bf9-8c45-a4628bfcec7d.
-2) `-linux`: whether to use the Linux job's artifacts to obtain the formatting patch. By default, the Windows' ones are used.
+2) `-linux`: whether to use the Linux job's artifacts to obtain the formatting patch. By default, Windows' ones are used.
 
 #### `mcs.ps1` - wrapper over the `mcs.exe` native tool
 
@@ -140,19 +140,19 @@ Parameters:
 1) RID and host arch (positional): what host/target combination should be used for the diffs. The default is `win-x64 x64`.
 2) Path to the `.mch` file to diff (positional): explicit path to the `.mch` file to use for diffs.
 3) Name of the collection to use for diffs, one of `aspnet`, `bench`, `clrtests`, `cglibs`, `libs` or `libstests`. By default, the `bench` collection is used.
-4) Comma-separated list of contexts, in the same format as that of `superpmi.exe`, e. g. `1-100,90-9000`: the contexts to use for diff. Diffing whole collections takes a considerable amount of time, so this option can be quite handy for quick estimates.
+4) Comma-separated list of contexts, in the same format as that of `superpmi.exe`, e. g. `1-100,90-9000`: the contexts to use for diffs. Diffing whole collections takes a considerable amount of time, so this option can be quite handy for quick estimates.
 5) Jit options, in the format of `JitOption=Value`: options to use for both "base" and "diff" Jits when running them.
 6) `basediffs`: whether to use the "base" Jit for the diff.
-7) Path to the `.dll` file: the PIN too library to use for the diffs. Useful for testing in-development PIN tools.
+7) Path to a `.dll` file: the PIN tool library to use for the diffs. Useful for testing in-development PIN tools.
 8) `trace`: whether to use the "trace" mode of the PIN tool. The "trace" mode produces (on stderr) a complete per-function profile of instruction counts. The support for this mode in the script is not complete, but this option is still useful, in conjuction with PowerShell's `--verbose`, to obtain the command line for manual invocation of the PIN tool.
 
 #### `redownload-spmi-collections.ps1` - download a set of commonly useful collections
 
 Downloads SPMI collections for the `win-x64`, `win-x86`, `win-arm64`, `linux-arm` and `linux-x64` targets. This is a wrapper over `spmi.ps1`'s `redownload` functionality.
 
-#### `sbcg-reducer.ps1` - help fine the method responsible for silent bad codegen
+#### `sbcg-reducer.ps1` - help find the method with silent bad codegen
 
-Performs binary search through method hashes to identify method, which, when not run under MinOpts, leads to the test case failing. Relies on a custom `JitMinOptsRange` Jit config toggle.
+Performs binary search through method hashes to identify which method, when not run under MinOpts, leads to the test case failing. Relies on a custom `JitMinOptsRange` Jit config toggle.
 
 Parameters:
 1) `-command`: the command to run as the test case.
@@ -162,9 +162,9 @@ Parameters:
 
 #### `send-diffs.ps1` - commit diffs to a dedicated repository
 
-Under the `diffs` directory, there is a `diffs-repository` directory, which is inteded to be used in conjuction with this script to store diffs in as a `git`-based database. While SPMI in CI has mostly eliminated the need for this, it is still occasionally useful, especially when the volume of diffs is too large for CI to handle.
+Under `diffs`, there is a `diffs-repository` directory, which is inteded to be used in conjuction with this script to store diffs in a `git`-based database. While SPMI in CI has mostly eliminated the need for this, it is still occasionally useful, especially when the volume of diffs is too large for CI to handle.
 
-Before using this, `diffs-repository` must be initialized as a valid `git` reposity and connected to some default remote.
+Before using this, `diffs-repository` must be initialized as a valid `git` repository and connected to some default remote.
 
 Parameters:
 1) `-prIndex`: number of the pull request for which the diffs are being commited.
@@ -184,7 +184,7 @@ Parameters:
 
 #### `spmi.ps1` - wrapper over `superpmi.py`
 
-Ordinarily, invoking `superpmy.py`, especially in cross-targeting and filtering scenarios, can be quite verbose. This script is meant to optimize that friction away. Additioanlly, it provides retry loop support for downloading collections, where one can kill the python process and have it start over, which can be useful in cases (such as putting the computer to sleep, accidentally), where the download process "freezes".
+Ordinarily, invoking `superpmy.py`, especially in cross-targeting and filtering scenarios, can be quite verbose. This script is meant to optimize that friction away. Additioanlly, it provides retry loop support for downloading collections, where one can kill the python process and have it start over, which can be useful in cases (such as accidentally putting the computer to sleep), where the download process "freezes".
 
 Note the somewhat inordinate way in which the script takes arguments: they are all positional, and must be in strict order (defined below), except if the effective values used are the same as default ones. This means that, e. g., both `spmi win-x64 bench` and `spmi bench` are legal, but `spmi bench win-x64` is not.
 
@@ -192,6 +192,7 @@ Parameters:
 1) Action: one of `replay`, `asmdiffs`, `basediffs` and `redownload`. `basediffs` is the same as `asmdiffs`, except that it uses the "base" Jits. The default is `asmdiffs`.
 2) Target RID and host arch: the defaults are `win-x64` and `x64`. Like `diff-mem.ps1` and `diff-dasm.ps1`, `spmi.ps1` will prefer to use the `x86`-hosted compilers for `x86` and `ARM` diffs.
 3) Collection: one of `aspnet`, `bench`, `clrtests`, `cglibs`, `libs` or `libstests`. While replay and asmdiffs only support specifiying one collection, or none, in which case all are used, the `redownload` action supports a whitespace-separated list of them.
+4) Jit options: `b:JitOption=Value` if the option should apply only the the base compiler, `d:JitOption=Value` for the opposite, and simply `JitOption=Value` if it should apply to both.
 
 #### `unpack-dasm.ps1` - download and unpack diffs produced by SPMI in CI
 
