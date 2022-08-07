@@ -74,7 +74,7 @@ Parameters:
 1) `-arch`: the architecure of the core root. Default is `x64`.
 2) `-cg2`: whether to update the CG2 core root. Off by default.
 3) `-ilc`: whether to update the ILC core root. Note this refers to the RyuJit-LLVM runtimelab branch. Off by default.
-4) `-mono`: whether to update tehe Mono core root (CoreCLR core root with the runtime binaries replaced with their Mono equivalents). Off by default.
+4) `-mono`: whether to update the Mono core root (CoreCLR core root with the runtime binaries replaced with their Mono equivalents). Off by default.
 
 #### `update-jit.ps1` - "update" the Jit in the custom core root
 
@@ -82,10 +82,10 @@ Builds and copies the Jits from `runtime`'s artifacts to their location in the c
 
 Parameters:
 1) `-hostArch`: the architercture of the Jits to build. Default is `x64`.
-2) `-all`: whether the build "all" of the Jits (i. e. `clr.alljits`). By default, only the subset `clr.jit` is built.
+2) `-all`: whether to build "all" of the Jits (i. e. `clr.alljits`). By default, only the `clr.jit` subset is built.
 3) `-release|-r`: whether to build the Jits in `Release` configuration. By default, `Checked` and `Debug` Jits are built.
 4) `-refreshPdb|-p`: whether to regenerate the PDB files from scratch during the build. By default, the incremental build "appends" debugging information to the existing files, which can cause confusion in certain scenarios.
-5) `-updateBaseJits|-b`: whether to make the built Jits "base" (copy them the "base Jits" directory with `save-base-jits.ps1`). This is a very useful option when the "base" being diffed against (say, via SPMI) is not the same as the `HEAD` of `runtime-base` (which is intended to always be in sync with the `HEAD` of the remote fork and only update infrequently). In such a case, the common sequence of actions to perform is the following
+5) `-updateBaseJits|-b`: whether to make the built Jits "base" (copy them to the "base Jits" directory with `save-base-jits.ps1`). This is a very useful option when the "base" being diffed against (say, via SPMI) is not the same as the `HEAD` of `runtime-base` (which is intended to always be in sync with the `HEAD` of the remote fork and be updated infrequently). In such a case, the common sequence of actions to perform is the following:
    - `git rebase main -i` and `break` after the intended "base" commit.
    - `update-jit -b [-all]`
    - `git rebase --continue`
@@ -94,7 +94,7 @@ Parameters:
 6) `-llvmRyuJit`: whether to build and update the Jit associated with the RyuJit-LLVM runtimelab branch.
 7) `-cg2`: whether to update the CG2 custom core root. Note this is off by default.
 8) `-pgo`: whether to apply native PGO to the built Jits. By default, `Release` Jits are built with PGO off, to make PIN diffs reliable.
-9) `-stats`: the list of "stats" to build the Jits with. See the above notes on `build-jit-with-stats-defined.ps1`.
+9) `-stats`: the list of "stats" to build the Jits with. See the description of `build-jit-with-stats-defined.ps1`.
 
 ### "Diff" scripts
 
