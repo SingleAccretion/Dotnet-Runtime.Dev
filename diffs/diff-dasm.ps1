@@ -102,13 +102,12 @@ if (@($MchDirs).Length -ne 1)
 $MchFileName = ([string]::Join(".", $CurrentDirParts[1..5] + "mch"))
 $MchFile = Join-Path @($MchDirs)[0] $MchFileName
 
-$IsPrejit = $CurrentDirName.Contains("crossgen")
 $DisplayDiffFile = $null
 $OutputConfigs = @()
 
 if ($Log)
 {
-    $DisplayOption = $IsPrejit ? "NgenDump=*" : "JitDump=*"
+    $DisplayOption = "JitDump=*"
     $FileName = "log.cs"
     $OutputConfigs += ,($DisplayOption, $FileName)
     
@@ -116,7 +115,7 @@ if ($Log)
 }
 if ($Asm)
 {
-    $DisplayOption = $IsPrejit ? "NgenDisasm=*" : "JitDisasm=*"
+    $DisplayOption = "JitDisasm=*"
     $FileName = "asm.dasm"
     $OutputConfigs += ,($DisplayOption, $FileName)
     
