@@ -6,7 +6,6 @@ Param(
   [switch][Alias('p')]$RefreshPdb,
   [switch][Alias('b')]$UpdateBaseJits,
   [switch]$LlvmRyuJit,
-  [switch]$CG2,
   [switch]$Pgo,
   [string[]]$Stats = @()
 )
@@ -90,11 +89,8 @@ if (!$Release)
     $UpdateCoreRootExpression = ".\update-custom-core-root.ps1 -a $HostArch"
     if ($LlvmRyuJit)
     {
-        $UpdateCoreRootExpression += " -ilc"
-    }
-    if ($CG2)
-    {
-        $UpdateCoreRootExpression += " -cg2"
+        # Unlike CG2 and ILC, LLVM ILC core root is not updated automatically, so we have to request it explicitly.
+        $UpdateCoreRootExpression += " -llvmIlc"
     }
 
     Write-Verbose "Invoking: $UpdateCoreRootExpression"

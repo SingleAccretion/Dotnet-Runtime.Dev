@@ -73,7 +73,8 @@ Copies artifacts from the built repositories to "custom" core roots. These diffe
 Parameters:
 1) `-arch`: the architecure of the core root. Default is `x64`.
 2) `-cg2`: whether to update the CG2 core root. Off by default.
-3) `-ilc`: whether to update the ILC core root. Note this refers to the RyuJit-LLVM runtimelab branch. Off by default.
+3) `-ilc`: whether to update the ILC core root. Off by default.
+3) `-llvmIlc`: whether to update the ILC core root for the RyuJit-LLVM runtimelab branch. Off by default.
 4) `-mono`: whether to update the Mono core root (CoreCLR core root with the runtime binaries replaced with their Mono equivalents). Off by default.
 
 #### `update-jit.ps1` - update the Jits in custom core roots
@@ -92,9 +93,8 @@ Parameters:
    - `update-jit [-all]`
    - Run `diff-mem.ps1`, `pin.ps1`, `spmi.ps1`, etc.
 6) `-llvmRyuJit`: whether to build and update the Jit associated with the RyuJit-LLVM runtimelab branch.
-7) `-cg2`: whether to update the CG2 custom core root. Note this is off by default.
-8) `-pgo`: whether to apply native PGO to the built Jits. By default, `Release` Jits are built with PGO off, to make PIN diffs reliable.
-9) `-stats`: the list of "stats" to build the Jits with. See the description of `build-jit-with-stats-defined.ps1`.
+7) `-pgo`: whether to apply native PGO to the built Jits. By default, `Release` Jits are built with PGO off, to make PIN diffs reliable.
+8) `-stats`: the list of "stats" to build the Jits with. See the description of `build-jit-with-stats-defined.ps1`.
 
 ### "Diff" scripts
 

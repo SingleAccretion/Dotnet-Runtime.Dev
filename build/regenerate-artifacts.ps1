@@ -104,5 +104,5 @@ foreach ($Arch in $Arches)
         Invoke-Expression "$BaseRuntimePath\src\tests\build.cmd release generatelayoutonly $Arch"
     }
 
-    Invoke-Expression "$PSScriptRoot/update-custom-core-root.ps1 -a $Arch -cg2"
+    Invoke-Expression "$PSScriptRoot/update-custom-core-root.ps1 -a $Arch -cg2 -ilc"
 }

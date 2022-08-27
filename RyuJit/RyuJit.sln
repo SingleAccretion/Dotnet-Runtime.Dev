@@ -81,15 +81,30 @@ Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "superpmi_x86", "..\runtime\
 		IORedirection = Auto
 	EndProjectSection
 EndProject
-Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "ilc", "..\runtimelab\artifacts\bin\coreclr\windows.x64.Debug\ilc\ilc.exe", "{89E2D950-C02D-4923-9A32-76B83CB408B9}"
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "ilc", "..\build\ilc\ilc.exe", "{89E2D950-C02D-4923-9A32-76B83CB408B9}"
 	ProjectSection(DebuggerProjectSystem) = preProject
 		PortSupplier = 00000000-0000-0000-0000-000000000000
-		Executable = C:\Users\Accretion\source\dotnet\runtime\artifacts\bin\coreclr\windows.x64.Release\ilc\ilc.exe
+		Executable = C:\Users\Accretion\source\dotnet\build\ilc\ilc.exe
 		RemoteMachine = DESKTOP-C4G8F81
 		StartingDirectory = C:\Users\Accretion\source\dotnet\build\ilc
 		Arguments = @ilc.rsp
 		Environment = Default
 		LaunchingEngine = e55ccc87-77c9-4222-8310-09f38e24c40f
+		UseLegacyDebugEngines = No
+		LaunchSQLEngine = No
+		AttachLaunchAction = No
+		IORedirection = Auto
+	EndProjectSection
+EndProject
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "llvm-ilc", "..\runtimelab\artifacts\bin\coreclr\windows.x64.Debug\ilc\llvm-ilc.exe", "{6A3B9EB6-4CAC-4B20-B711-85FDAB77EB5F}"
+	ProjectSection(DebuggerProjectSystem) = preProject
+		PortSupplier = 00000000-0000-0000-0000-000000000000
+		Executable = C:\Users\Accretion\source\dotnet\runtimelab\artifacts\bin\coreclr\windows.x64.Debug\ilc\ilc.exe
+		RemoteMachine = DESKTOP-C4G8F81
+		StartingDirectory = C:\Users\Accretion\source\dotnet\build\llvm-ilc
+		Arguments = @llvm-ilc.rsp --codegenopt NgenDump=* --targetarch:wasm --targetos:wasm
+		Environment = Default
+		LaunchingEngine = 3b476d35-a401-11d2-aad4-00c04f990171
 		UseLegacyDebugEngines = No
 		LaunchSQLEngine = No
 		AttachLaunchAction = No
