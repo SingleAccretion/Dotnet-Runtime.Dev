@@ -11,7 +11,7 @@ if ($Download)
 {
     $BuildId = $Download
     $ArtifactName = "SuperPMI_Asmdiffs_$($Arch)_checked"
-    $SrcUrl = "https://dev.azure.com/dnceng/public/_apis/build/builds/$BuildId/artifacts?artifactName=$ArtifactName&api-version=6.1-preview.5&%24format=zip"
+    $SrcUrl = "https://dev.azure.com/dnceng-public/public/_apis/build/builds/$BuildId/artifacts?artifactName=$ArtifactName&api-version=6.1-preview.5&%24format=zip"
     $ZipFile = "$HOME/Downloads/$ArtifactName.zip"
 
     Write-Verbose "Will be downloading the diffs from $SrcUrl to $ZipFile"

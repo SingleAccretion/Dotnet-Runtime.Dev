@@ -6,7 +6,7 @@ Param(
 
 $BuildId = $Download
 $PatchName = "format.$($Linux ? 'Linux' : 'windows').x64.patch"
-$SrcUrl = "https://dev.azure.com/dnceng/public/_apis/build/builds/$BuildId/artifacts?artifactName=$PatchName&api-version=6.1-preview.5&%24format=zip"
+$SrcUrl = "https://dev.azure.com/dnceng-public/public/_apis/build/builds/$BuildId/artifacts?artifactName=$PatchName&api-version=6.1-preview.5&%24format=zip"
 $TempZipFile = "$(New-TemporaryFile).zip"
 
 Write-Verbose "Will be downloading the patch from $SrcUrl to $TempZipFile"
