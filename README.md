@@ -146,6 +146,38 @@ Parameters:
 7) Path to a `.dll` file: the PIN tool library to use for the diffs. Useful for testing in-development PIN tools.
 8) `trace`: whether to use the "trace" mode of the PIN tool. The "trace" mode produces (on stderr) a complete per-function profile of instruction counts. The support for this mode in the script is not complete, but this option is still useful, in conjuction with PowerShell's `--verbose`, to obtain the command line for manual invocation of the PIN tool.
 
+#### `analyze-pin-trace-diff.ps1` - diff the traces produced by the PIN tool
+
+Analyzes the information obtained with the PIN tool's `trace` option:
+```
+Base: 1039322782, Diff: 1040078986, +0.0728%
+
+`Compiler::optCopyPropPushDef'::`2'::<lambda_1>::operator()      : 1073512 : NA       : 18.17% : +0.1033%
+SsaBuilder::RenamePushDef                                        : 911022  : NA       : 15.42% : +0.0877%
+`Compiler::fgValueNumberLocalStore'::`2'::<lambda_1>::operator() : 584435  : NA       : 9.89%  : +0.0562%
+Compiler::lvaLclExactSize                                        : 244692  : +60.09%  : 4.14%  : +0.0235%
+ValueNumStore::VNForMapSelectWork                                : 87006   : +2.78%   : 1.47%  : +0.0084%
+GenTree::DefinesLocal                                            : 82633   : +1.63%   : 1.40%  : +0.0080%
+Rationalizer::DoPhase                                            : -91104  : -6.36%   : 1.54%  : -0.0088%
+Compiler::gtCallGetDefinedRetBufLclAddr                          : -115926 : -98.78%  : 1.96%  : -0.0112%
+Compiler::optBlockCopyProp                                       : -272450 : -5.75%   : 4.61%  : -0.0262%
+Compiler::fgValueNumberLocalStore                                : -313540 : -50.82%  : 5.31%  : -0.0302%
+Compiler::GetSsaNumForLocalVarDef                                : -322826 : -100.00% : 5.46%  : -0.0311%
+SsaBuilder::RenameDef                                            : -478441 : -28.33%  : 8.10%  : -0.0460%
+Compiler::optCopyPropPushDef                                     : -711380 : -55.34%  : 12.04% : -0.0684%
+```
+The columns, in order:
+1) The instruction count difference for the given function.
+2) Same as `1`, but relative. May be `NA`, indicating the base didn't contain the given function, or `-100%` indicating the diff didn't.
+3) Relative contribution to the diff. Calculated as `abs(instruction diff count) / sum-over-all-functions(abs(instruction diff count))`.
+4) Relative difference, calculated as `instruction diff count / total base instruction count`.
+
+Parameters:
+1) `-baseTracePath`: path to the base trace file.
+2) `-diffTracePath`: path to the diff trace file.
+3) `-noiseFilter`: filter out function with contributions lower than this number (specified as a percentage). `0.1%` by default.
+4) `-functionsFilter`: filter out functions with these names. All functions are shown by default, however, it is useful to filter out `__dyn_tls_init`, as it destabilizes the instruction counts a lot, for uninvestigated reasons.
+
 #### `redownload-spmi-collections.ps1` - download a set of commonly useful collections
 
 Downloads SPMI collections for the `win-x64`, `win-x86`, `win-arm64`, `linux-arm` and `linux-x64` targets. This is a wrapper over `spmi.ps1`'s `redownload` functionality.
