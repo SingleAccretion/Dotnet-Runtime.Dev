@@ -25,7 +25,7 @@ switch ($Args)
 {
     "aspnet" { $SpmiCollectionNames = AddName $SpmiCollectionNames "aspnet.run" }
     "bench" { $SpmiCollectionNames = AddName $SpmiCollectionNames "benchmarks.run" }
-    "clrtests" { $SpmiCollectionNames = AddName $SpmiCollectionNames "coreclr_tests.pmi" }
+    "clrtests" { $SpmiCollectionNames = AddName $SpmiCollectionNames "coreclr_tests.run" }
     "cglibs" { $SpmiCollectionNames = AddName $SpmiCollectionNames "libraries.crossgen2" }
     "libs" { $SpmiCollectionNames = AddName $SpmiCollectionNames "libraries.pmi" }
     "libstests" { $SpmiCollectionNames = AddName $SpmiCollectionNames "libraries_tests.pmi" }

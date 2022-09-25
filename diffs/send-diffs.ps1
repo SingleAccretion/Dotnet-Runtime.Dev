@@ -19,18 +19,23 @@ Write-Verbose "Diffs are in: $MdFilePath"
 
 $Diffs = Get-Content $MdFilePath
 $Content = $Diffs
-$Content = $Content[0]
-$Content = $Content.Substring(0, $Content.IndexOf(".checked.mch"))
+$SomeLineWithCollection = $null
+foreach ($Line in @($Content))
+{
+    if ($Line -match "(\w+)\.(\w+)\.checked\.mch")
+    {
+        $SomeLineWithCollection = $Line
+        break
+    }
+}
+if (!$SomeLineWithCollection)
+{
+    Write-Error "Could not determine the diffs' target"
+    exit
+}
 
-$ArchStartIndex = $Content.LastIndexOf(".")
-$Arch = $Content.Substring($ArchStartIndex + 1)
-
-$Content = $Content.Substring(0, $ArchStartIndex)
-
-$OSStartIndex = $Content.LastIndexOf(".")
-$OS = $Content.Substring($OSStartIndex + 1)
-
-$OS = @{ "windows" = "win"; "Linux" = "linux" }[$OS]
+$Arch = $Matches[2]
+$OS = @{ "windows" = "win"; "Linux" = "linux" }[$Matches[1]]
 
 Write-Output "Sending $OS-$Arch diffs for $RepositoryName PR number $PrIndex..."
 
