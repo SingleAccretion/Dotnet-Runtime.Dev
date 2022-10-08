@@ -64,7 +64,7 @@ $MchPath = @($MchPaths)[0]
 
 $PinArch = $HostArch -eq "x86" ? "ia32" : "intel64"
 $PinPath = [System.IO.Path]::GetFullPath("pin\pin-3.19-98425-gd666b2bee-msvc-windows\$PinArch\bin\pin.exe", $PSScriptRoot)
-$PinToolArgs = "-m clrjit"
+$PinToolArgs = "-m clrjit.dll"
 if ($InstrumentationMode -eq "trace")
 {
     $PinToolArgs += " -trace"
