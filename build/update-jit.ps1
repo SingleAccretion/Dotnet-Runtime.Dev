@@ -7,6 +7,7 @@ Param(
   [switch][Alias('b')]$UpdateBaseJits,
   [switch]$LlvmRyuJit,
   [switch]$Pgo,
+  [ValidateSet("Debug","Checked","Release")][string[]]$Configs = $null,
   [string[]]$Stats = @()
 )
 
@@ -17,15 +18,17 @@ $Subset = $All ? "Clr.AllJits" : $LlvmRyuJit ? "Clr.WasmJit" : "Clr.Jit"
 $ClrComponent = @{ "Clr.AllJits" = "alljits"; "Clr.Jit" = "jit"; "Clr.WasmJit" = "wasmjit" }[$Subset]
 $UseBuildRuntimeScript = $ClrComponent -ne $null -and !$Pgo # build-runtime.cmd needs the paths to PGO data, etc.
 
-$Configs = $Release ? @("Release") : $LlvmRyuJit ? @("Debug") : @("Checked", "Debug")
-$BuildArch = $HostArch
+if (!$Configs)
+{
+    $Configs = $Release ? @("Release") : @("Checked", "Debug")
+}
 $HostOS = "Windows"
 
 Write-Verbose "Subset built: $Subset"
 Write-Verbose "CLR component built: $ClrComponent"
 Write-Verbose "Using build-runtime.cmd: $UseBuildRuntimeScript"
 Write-Verbose "Configs built: $Configs"
-Write-Verbose "Build arch: $BuildArch"
+Write-Verbose "Host arch: $HostArch"
 Write-Verbose "Host OS: $HostOS"
 
 foreach ($Config in $Configs)
@@ -52,11 +55,11 @@ foreach ($Config in $Configs)
         # Speed up the build by using build-runtime.cmd, if possible, directly.
         if ($UseBuildRuntimeScript)
         {
-            $BuildExpression = "$RuntimePath\src\coreclr\build-runtime.cmd $Config $BuildArch -component $ClrComponent"
+            $BuildExpression = "$RuntimePath\src\coreclr\build-runtime.cmd $Config $HostArch -component $ClrComponent"
         }
         else
         {
-            $BuildExpression = "$RuntimePath\build.cmd $Subset -c $Config -a $BuildArch"
+            $BuildExpression = "$RuntimePath\build.cmd $Subset -c $Config -a $HostArch"
         }
 
         if ($Config -eq "Release")
@@ -72,11 +75,13 @@ foreach ($Config in $Configs)
         Invoke-Expression $BuildExpression
     }
 
-    $ClrBuildDir = "$RuntimePath\artifacts\bin\coreclr\$HostOS.$HostArch.$Config"
-    $CoreRootJitDir = "$RuntimePath\artifacts\tests\coreclr\$HostOS.$BuildArch.$Config\Tests\Core_Root"
-    $JitsToCopyGlob = $All ? "clrjit*.dll" : "clrjit.dll"
+    $ClrBuildDir = "$RuntimePath/artifacts/bin/coreclr/$HostOS.$HostArch.$Config"
+    $TargetJitDir = $LlvmRyuJit ? "$RuntimePath/artifacts/bin/coreclr/$HostOS.$HostArch.$Config/ilc"
+                                : "$RuntimePath/artifacts/tests/coreclr/$HostOS.$HostArch.$Config/Tests/Core_Root"
+    $JitsToCopyGlob = $LlvmRyuJit ? ($All ? "clrjit_*" : "clrjit_browser_wasm32_*") : ($All ? "clrjit*" : "clrjit")
 
-    robocopy $ClrBuildDir $CoreRootJitDir $JitsToCopyGlob | Write-Verbose
+    robocopy $ClrBuildDir $TargetJitDir "${JitsToCopyGlob}.dll" | Write-Verbose
+    robocopy $ClrBuildDir\PDB $TargetJitDir "${JitsToCopyGlob}.pdb" | Write-Verbose
 
     if ($UpdateBaseJits -and $Config -ne "Debug")
     {
@@ -84,9 +89,9 @@ foreach ($Config in $Configs)
     }
 }
 
-if (!$Release)
+if (!$Configs.Contains("Release"))
 {
-    $UpdateCoreRootExpression = ".\update-custom-core-root.ps1 -a $HostArch"
+    $UpdateCoreRootExpression = "$PSScriptRoot/update-custom-core-root.ps1 -a $HostArch"
     if ($LlvmRyuJit)
     {
         # Unlike CG2 and ILC, LLVM ILC core root is not updated automatically, so we have to request it explicitly.

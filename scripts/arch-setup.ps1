@@ -63,7 +63,7 @@ Write-Verbose "Arch-setup: Target: $Rid"
 
 $Rid = $Rid.Split("-")
 $TargetArch = $Rid[1]
-$TargetOS = @{ "win" = "windows"; "linux" = "Linux"; "osx" = "OSX" }[$Rid[0]]
+$TargetOS = @{ "win" = "windows"; "linux" = "linux"; "osx" = "osx" }[$Rid[0]]
 $JitTargetOS = @{ "win"  = "win"; "linux" = "unix"; "osx" = "unix" }[$Rid[0]]
 if (@("arm", "arm64").Contains($TargetArch))
 {

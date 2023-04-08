@@ -7,10 +7,10 @@ $HostArch, $TargetOS, $TargetArch, $JitName = . $PSScriptRoot/../scripts/arch-se
 
 $PinToolPath = $null
 $Basediffs = $false
+$TraceInstrumentation = $false
 $JitOptions = @()
 $UserContextNumbers = @()
 $MchPaths = @()
-$InstrumentationMode = "counter"
 for ($i = 0; $i -lt @($Args).Length; $i++)
 {
     $Arg = $Args[$i]
@@ -39,7 +39,7 @@ for ($i = 0; $i -lt @($Args).Length; $i++)
     }
     if ($Arg -eq "trace")
     {
-        $InstrumentationMode = "trace"
+        $TraceInstrumentation = $true
     }
 }
 
@@ -65,7 +65,7 @@ $MchPath = @($MchPaths)[0]
 $PinArch = $HostArch -eq "x86" ? "ia32" : "intel64"
 $PinPath = [System.IO.Path]::GetFullPath("pin\pin-3.19-98425-gd666b2bee-msvc-windows\$PinArch\bin\pin.exe", $PSScriptRoot)
 $PinToolArgs = "-m $JitName"
-if ($InstrumentationMode -eq "trace")
+if ($TraceInstrumentation)
 {
     $PinToolArgs += " -trace"
 }
@@ -87,7 +87,7 @@ else
     $BaseJitPath = [System.IO.Path]::GetFullPath("..\runtime-base\artifacts\bin\coreclr\windows.$HostArch.Release\$JitName", $PSScriptRoot)
 }
 
-$SpmiMissingDataCount = -1.0;
+$SpmiMissingDataResult = -1.0;
 
 function InvokeSpmi($FilePath, $InvokeCmd, $ContextNumbers, $SpmiKind)
 {
@@ -104,13 +104,13 @@ function InvokeSpmi($FilePath, $InvokeCmd, $ContextNumbers, $SpmiKind)
     {
         if ($LastExitCode -eq 3)
         {
-            return $SpmiMissingDataCount
+            return $SpmiMissingDataResult
         }
         else
         {
             Write-Error "$SpmiKind SPMI exit code was $LastExitCode, see $FilePath for details"
             exit
-        }        
+        }
     }
 
     $SpmiOutput = Get-Content $FilePath
@@ -119,10 +119,10 @@ function InvokeSpmi($FilePath, $InvokeCmd, $ContextNumbers, $SpmiKind)
     {
         return [double]$Matches[1]
     }
-    else
+    elseif (!$TraceInstrumentation)
     {
-        Write-Error "results from $ResultsFile are not in the expected format!"
-        exit    
+        Write-Error "results from $BaseResultsFile are not in the expected format!"
+        exit
     }
 }
 
@@ -186,43 +186,64 @@ $DiffInvokeCmd = "$PinInvokeCmd $DiffSpmiCmd"
 Write-Output "Base Jit is: $BaseJitPath"
 Write-Output "Diff Jit is: $DiffJitPath"
 
-$ResultsFile = New-TemporaryFile
+$BaseResultsFile = $TraceInstrumentation ? "$PSScriptRoot/basetp.txt" : $(New-TemporaryFile)
+$DiffResultsFile = $TraceInstrumentation ? "$PSScriptRoot/difftp.txt" : $(New-TemporaryFile)
 $SpmiContextNumbers = $UserContextNumbers
 
+Write-Verbose "Base results file: $BaseResultsFile"
+Write-Verbose "Diff results file: $DiffResultsFile"
+
 function StringizeContexts($ContextsList) { return [string]::Join(',', $ContextsList) }
-function ParseContexts($Contexts) { return $Contexts.Split(",") }
 
 function RunSpmi($Cmd, $SpmiKind)
 {
+    if ($TraceInstrumentation)
+    {
+        Write-Host "Running $($SpmiKind.ToLower()) Jit..."
+    }
+
+    $ResultsFile = $SpmiKind -eq "Base" ? $BaseResultsFile : $DiffResultsFile
     $Count = InvokeSpmi $ResultsFile $Cmd $SpmiContextNumbers $SpmiKind
-    Write-Host "${SpmiKind}: $Count"
+
+    if (!$TraceInstrumentation)
+    {
+        Write-Host "${SpmiKind}: $Count"
+    }
     return $Count
 }
 
 function RunBaseSpmi() { return RunSpmi $BaseInvokeCmd "Base" }
 function RunDiffSpmi() { return RunSpmi $DiffInvokeCmd "Diff" }
 
-$BaseCount = RunBaseSpmi
-if ($BaseCount -eq $SpmiMissingDataCount)
+$BaseResult = RunBaseSpmi
+if ($BaseResult -eq $SpmiMissingDataResult)
 {
-    $SpmiContextNumbers = ExtractSuccessfulContexts $ResultsFile
+    $SpmiContextNumbers = ExtractSuccessfulContexts $BaseResultsFile
     Write-Output "Encountered MISSING data, rerunning with clean contexts: $(StringizeContexts $SpmiContextNumbers)"
 
-    $BaseCount = RunBaseSpmi
+    $BaseResult = RunBaseSpmi
 }
 
-$DiffCount = RunDiffSpmi
-if ($DiffCount -eq $SpmiMissingDataCount)
+$DiffResult = RunDiffSpmi
+if ($DiffResult -eq $SpmiMissingDataResult)
 {
-    $SpmiContextNumbers = ExtractSuccessfulContexts $ResultsFile
+    $SpmiContextNumbers = ExtractSuccessfulContexts $DiffResultsFile
     Write-Output "Encountered MISSING data for the diff run, rerunning with clean contexts: $(StringizeContexts $SpmiContextNumbers)"
 
-    $BaseCount = RunBaseSpmi
-    $DiffCount = RunDiffSpmi
+    $BaseResult = RunBaseSpmi
+    $DiffResult = RunDiffSpmi
 }
 
-$Delta = $DiffCount - $BaseCount
-Write-Output "Delta: $Delta"
-Write-Output "Relative delta: $((($Delta / $BaseCount) * 100).ToString("0.0000"))%"
+if ($TraceInstrumentation)
+{
+    . $PSScriptRoot/analyze-pin-trace-diff.ps1 -Base $BaseResultsFile -Diff $DiffResultsFile
+}
+else
+{
+    $Delta = $DiffResult - $BaseResult
+    Write-Output "Delta: $Delta"
+    Write-Output "Relative delta: $((($Delta / $BaseResult) * 100).ToString("0.0000"))%"
 
-Remove-Item $ResultsFile
+    Remove-Item $BaseResultsFile
+    Remove-Item $DiffResultsFile
+}

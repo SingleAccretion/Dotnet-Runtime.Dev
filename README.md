@@ -94,7 +94,8 @@ Parameters:
    - Run `diff-mem.ps1`, `pin.ps1`, `spmi.ps1`, etc.
 6) `-llvmRyuJit`: whether to build and update the Jit associated with the RyuJit-LLVM runtimelab branch.
 7) `-pgo`: whether to apply native PGO to the built Jits. By default, `Release` Jits are built with PGO off, to make PIN diffs reliable.
-8) `-stats`: the list of "stats" to build the Jits with. See the description of `build-jit-with-stats-defined.ps1`.
+9) `-configs`: list of configurations to build the Jits in. Useful to override the defaults.
+9) `-stats`: the list of "stats" to build the Jits with. See the description of `build-jit-with-stats-defined.ps1`.
 
 ### "Diff" scripts
 
@@ -144,7 +145,7 @@ Parameters:
 5) Jit options, in the format of `JitOption=Value`: options to use for both "base" and "diff" Jits when running them.
 6) `basediffs`: whether to use the "base" Jit for the diff.
 7) Path to a `.dll` file: the PIN tool library to use for the diffs. Useful for testing in-development PIN tools.
-8) `trace`: whether to use the "trace" mode of the PIN tool. The "trace" mode produces (on stderr) a complete per-function profile of instruction counts. The support for this mode in the script is not complete, but this option is still useful, in conjuction with PowerShell's `--verbose`, to obtain the command line for manual invocation of the PIN tool.
+8) `trace`: whether to use the "trace" mode of the PIN tool. Traces will be saved to `diffs/basetp.txt` and `diffs/difftp.txt` and analyzed with `analyze-pin-trace-diff.ps1`.
 
 #### `analyze-pin-trace-diff.ps1` - diff the traces produced by the PIN tool
 
@@ -210,9 +211,10 @@ Very useful for quickly getting a new terminal instance configured for running C
 
 Parameters:
 1) `-arch`: architecture of the core root to use. Default is `x64`.
-2) `-tieredCompilation`: whether to enable tiered compilation. By default, it is turned off.
-3) `-base`: whether to use the core root from the `runtime-base` repository. By default the "custom" core roots are used.
-4) `-stressLevel`: the level to use for `JitStress`, if any. By default, no stress is applied.
+2) `-nativeAot`: whether the test environment is to be set up for NativeAOT-LLVM testing. Sets `CLRCustomTestLauncher`.
+3) `-tieredCompilation`: whether to enable tiered compilation. By default, it is turned off.
+4) `-base`: whether to use the core root from the `runtime-base` repository. By default the "custom" core roots are used.
+5) `-stressLevel`: the level to use for `JitStress`, if any. By default, no stress is applied.
 
 #### `spmi.ps1` - wrapper over `superpmi.py`
 

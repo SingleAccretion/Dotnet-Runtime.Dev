@@ -46,21 +46,24 @@ if (!$SpmiIndex)
     return
 }
 
+$ShowDiff = !$Log -and !$Asm
+
 Write-Verbose "Current directory name is: '$CurrentDirName'"
 
-if (!$CurrentDir.Contains("spmi") -or $CurrentDirParts[0] -ne "asm")
+if (!$CurrentDir.Contains("spmi") -or !@("asm", "repro").Contains($CurrentDirParts[0]))
 {
     Write-Error "Must be in the SPMI results directory to obtain diffs!"
     return
 }
 
-if (!$Log -and !$Asm)
+if ($ShowDiff)
 {
     ShowDiff "base/$SpmiIndex.dasm" "diff/$SpmiIndex.dasm"
     return
 }
 
 # "asm.libraries_tests.pmi.windows.x64.checked.1"
+# "repro.benchmarks.run.Linux.arm.checked"
 
 $BuildType = $CurrentDirParts[5]
 Write-Verbose "Build type is: '$BuildType'"

@@ -24,7 +24,7 @@ if ($CG2)
     Remove-Item $Crossgen2DestPath/clrjit*.dll
 }
 
-# The ILC custom core root is also used for both compilation and running the ILC itslef. This works because
+# The ILC custom core root is also used for both compilation and running the ILC itself. This works because
 # ILC is copied self-contained, and thus does not conflict with the NativeAOT-specific CoreLib. It also makes
 # the CG2 renaming trick unnecessary. We should consider switching CG2 to the same plan.
 $IlcDestPath = Join-Path $PSScriptRoot "ilc"
@@ -44,16 +44,14 @@ if ($Ilc)
 if ($LlvmIlc)
 {
     # We want the files from "the AOT SDK" (i. e. the runtime binaries) and "the framework" to end up in the custom core root.
-    $SourcePath = Join-Path $PSScriptRoot "../runtimelab/artifacts/tests/coreclr/Browser.wasm.Debug/Tests/Core_Root/nativeaot"
+    $SourceFrameworkPath = Join-Path $PSScriptRoot "../runtimelab/artifacts/tests/coreclr/Browser.wasm.Debug/Tests/Core_Root"
+    $SourceAotSdkPath = Join-Path $PSScriptRoot "../runtimelab/artifacts/bin/coreclr/Browser.wasm.Debug/aotsdk"
     $LlvmIlcDestPath = Join-Path $PSScriptRoot "llvm-ilc"
 
-    robocopy $SourcePath/sdk $LlvmIlcDestPath | Write-Verbose
-    robocopy $SourcePath/framework $LlvmIlcDestPath | Write-Verbose
+    # Copy the "target" binaries into out custom core root
+    robocopy $SourceFrameworkPath $LlvmIlcDestPath | Write-Verbose
+    robocopy $SourceAotSdkPath $LlvmIlcDestPath | Write-Verbose
     Copy-Item $PSScriptRoot/llvm-ilc.rsp $LlvmIlcDestPath
-
-    # Copy the Jits to be used by ILC. Note the non-LLVM ILC path does this below (i. e. always).
-    $SourcePathForJits = Join-Path $PSScriptRoot "../runtimelab/artifacts/bin/coreclr/Windows.$Arch.Debug"
-    robocopy $SourcePathForJits $IlcDestPath clrjit* | Write-Verbose
 }
 
 $RuntimePath = [System.IO.Path]::GetFullPath("..\runtime", $PSScriptRoot)
@@ -88,7 +86,7 @@ robocopy $SrcCheckedCoreRootPath $CoreRootDestPath /XF $ClrJitGlob | Write-Verbo
 robocopy $SrcCheckedCoreRootPath\PDB $CoreRootDestPath /XF $ClrJitPbdGlob | Write-Verbose
 
 $DebugJitsPath = "$TestsPath\windows.$Arch.Debug\Tests\Core_Root"
-$DebugJitsPdbPath = "$TestsPath\windows.$Arch.Debug\Tests\Core_Root\PDB"
+$DebugJitsPdbPath = Join-Path $DebugJitsPath "PDB"
 
 # We overwrite the checked Jits with Debug ones.
 foreach ($DestPath in @($CoreRootDestPath, $Crossgen2DestPath, $IlcDestPath))

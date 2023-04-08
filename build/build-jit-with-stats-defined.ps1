@@ -2,7 +2,7 @@
 Param(
   [switch]$Base,
   [switch]$Save,
-  [string]$JitSubset,
+  [ValidateSet("clr.jit","clr.alljits","clr.wasmjit")][string]$JitSubset,
   [string]$Arch,
   [string]$Config,
   [ValidateSet("mem","hoist","args","blocks","loops","block-sizes","node-sizes","emit","bashing","opers")][string[]]$Stats = @()
@@ -59,9 +59,10 @@ if ($Save)
     {
         mkdir $SavedJitsDir | Write-Verbose
     }
-    
+
     Write-Verbose "Saving the built Jits to $SavedJitsDir"
     robocopy $BuiltJitsPath $SavedJitsDir clrjit* | Write-Verbose
+    robocopy $BuiltJitsPath/PDB $SavedJitsDir clrjit* | Write-Verbose
 }
 
 $BuildExpression = "$RuntimePath\build $JitSubset -c $Config -a $Arch"
@@ -85,7 +86,8 @@ if ($Save)
     
     Write-Verbose "Copying custom Jits to $CustomJitsDir"
     robocopy $BuiltJitsPath $CustomJitsDir clrjit* | Write-Verbose
+    robocopy $BuiltJitsPath/PDB $CustomJitsDir clrjit* | Write-Verbose
     Write-Verbose "Restoring the original Jits"
     robocopy $SavedJitsDir $BuiltJitsPath clrjit* | Write-Verbose
+    robocopy $SavedJitsDir $BuiltJitsPath/PDB clrjit* | Write-Verbose
 }
-

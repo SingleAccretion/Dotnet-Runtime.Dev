@@ -41,7 +41,7 @@ if (!$HostArch -and ${Rid}?.EndsWith("-arm"))
     $HostArch = "x86"
 }
 
-$HostArch, $TargetOS, $TargetArch, $JitName = ../scripts/arch-setup.ps1 $Rid $HostArch
+$HostArch, $TargetOS, $TargetArch, $JitName = & $PSScriptRoot/../scripts/arch-setup.ps1 $Rid $HostArch
 
 $SpmiCollectionsToFiltersMap = [ordered]@{
     "aspnet" = "aspnet";
@@ -102,7 +102,7 @@ function RunSpmiScript($SpmiCommandLine)
 {
     $SpmiPath = [System.IO.Path]::GetFullPath("..\runtime\src\coreclr\scripts\superpmi.py", $PSScriptRoot)
     $Invocation = "py $SpmiPath $SpmiAction -target_os $TargetOS -target_arch $TargetArch $SpmiCommandLine"
-    
+
     Write-Verbose "Running '$Invocation'"
     Invoke-Expression $Invocation
 }
@@ -131,7 +131,7 @@ else
     {
         $SpmiAction = "asmdiffs"
     }
-    
+
     if ($SpmiAction -eq "asmdiffs")
     {
         if ($Action -eq "basediffs")
@@ -146,7 +146,7 @@ else
         Write-Verbose "Base jit path is '$BaseJitPath'"
 
         $BaseJitOption = "-base_jit_path $BaseJitPath"
-        
+
         $BaseJitOptions = @()
         $DiffJitOptions = @()
         foreach ($JitOption in $JitOptions)
@@ -167,7 +167,7 @@ else
         }
         $BaseJitOptionsOption = "$($BaseJitOptions | ForEach-Object { `"-base_jit_option $_`" })"
         $DiffJitOptionsOption = "$($DiffJitOptions | ForEach-Object { `"-diff_jit_option $_`" })"
-        
+
         $JitOptionsOption = "$BaseJitOptionsOption $DiffJitOptionsOption"
     }
     elseif ($SpmiAction -eq "replay")
