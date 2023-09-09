@@ -13,6 +13,7 @@ if (!$BuiltJitsPath)
 $SavedJitsPath = . $PSScriptRoot/../scripts/saved-jits.ps1 $HostArch $Config
 mkdir $SavedJitsPath -Force > $null
 robocopy $BuiltJitsPath $SavedJitsPath clrjit* | Write-Verbose
+robocopy $BuiltJitsPath/PDB $SavedJitsPath clrjit* | Write-Verbose
 
 Write-Host "" -ForegroundColor Yellow
 Write-Host "Copied Jits from $BuiltJitsPath to $SavedJitsPath" -ForegroundColor Yellow

@@ -25,6 +25,8 @@ switch ($Args)
 {
     "aspnet" { $SpmiCollectionNames = AddName $SpmiCollectionNames "aspnet.run" }
     "bench" { $SpmiCollectionNames = AddName $SpmiCollectionNames "benchmarks.run" }
+    "pgobench" { $SpmiCollectionNames = AddName $SpmiCollectionNames "benchmarks.run_pgo" }
+    "tierbench" { $SpmiCollectionNames = AddName $SpmiCollectionNames "benchmarks.run_tiered" }
     "clrtests" { $SpmiCollectionNames = AddName $SpmiCollectionNames "coreclr_tests.run" }
     "cglibs" { $SpmiCollectionNames = AddName $SpmiCollectionNames "libraries.crossgen2" }
     "libs" { $SpmiCollectionNames = AddName $SpmiCollectionNames "libraries.pmi" }
@@ -34,7 +36,7 @@ switch ($Args)
 Write-Verbose "Spmi-collections: Detected the following collections: $SpmiCollectionNames"
 
 $MchBasePath = Join-Path $PSScriptRoot "../diffs/spmi/mch"
-$MchBasePaths = Get-ChildItem -Path $MchBasePath -Filter "*$TargetOS.$TargetArch*"
+$MchBasePaths = Get-ChildItem -Path $MchBasePath -Filter "*$TargetOS.$TargetArch"
 
 if (@($MchBasePaths).Length -ne 1)
 {

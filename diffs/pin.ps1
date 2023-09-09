@@ -5,6 +5,7 @@ Param(
 
 $HostArch, $TargetOS, $TargetArch, $JitName = . $PSScriptRoot/../scripts/arch-setup.ps1 @Args
 
+$InstrumentBase = $true
 $PinToolPath = $null
 $Basediffs = $false
 $TraceInstrumentation = $false
@@ -40,6 +41,11 @@ for ($i = 0; $i -lt @($Args).Length; $i++)
     if ($Arg -eq "trace")
     {
         $TraceInstrumentation = $true
+    }
+    if ($Arg -eq "tracediff")
+    {
+        $TraceInstrumentation = $true
+        $InstrumentBase = $false
     }
 }
 
@@ -113,13 +119,18 @@ function InvokeSpmi($FilePath, $InvokeCmd, $ContextNumbers, $SpmiKind)
         }
     }
 
+    if ($TraceInstrumentation)
+    {
+        return
+    }
+
     $SpmiOutput = Get-Content $FilePath
     $LastLine = $SpmiOutput[$SpmiOutput.Length - 1]
     if ($LastLine -match "Count (\d+)")
     {
         return [double]$Matches[1]
     }
-    elseif (!$TraceInstrumentation)
+    else
     {
         Write-Error "results from $BaseResultsFile are not in the expected format!"
         exit
@@ -183,7 +194,10 @@ $PinInvokeCmd = "$PinPath -t $PinToolPath $PinToolArgs --"
 $BaseInvokeCmd = "$PinInvokeCmd $BaseSpmiCmd"
 $DiffInvokeCmd = "$PinInvokeCmd $DiffSpmiCmd"
 
-Write-Output "Base Jit is: $BaseJitPath"
+if ($InstrumentBase)
+{
+    Write-Output "Base Jit is: $BaseJitPath"
+}
 Write-Output "Diff Jit is: $DiffJitPath"
 
 $BaseResultsFile = $TraceInstrumentation ? "$PSScriptRoot/basetp.txt" : $(New-TemporaryFile)
@@ -215,13 +229,16 @@ function RunSpmi($Cmd, $SpmiKind)
 function RunBaseSpmi() { return RunSpmi $BaseInvokeCmd "Base" }
 function RunDiffSpmi() { return RunSpmi $DiffInvokeCmd "Diff" }
 
-$BaseResult = RunBaseSpmi
-if ($BaseResult -eq $SpmiMissingDataResult)
+if ($InstrumentBase)
 {
-    $SpmiContextNumbers = ExtractSuccessfulContexts $BaseResultsFile
-    Write-Output "Encountered MISSING data, rerunning with clean contexts: $(StringizeContexts $SpmiContextNumbers)"
-
     $BaseResult = RunBaseSpmi
+    if ($BaseResult -eq $SpmiMissingDataResult)
+    {
+        $SpmiContextNumbers = ExtractSuccessfulContexts $BaseResultsFile
+        Write-Output "Encountered MISSING data, rerunning with clean contexts: $(StringizeContexts $SpmiContextNumbers)"
+
+        $BaseResult = RunBaseSpmi
+    }
 }
 
 $DiffResult = RunDiffSpmi

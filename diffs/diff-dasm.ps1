@@ -16,7 +16,7 @@ $CurrentDirParts = $CurrentDirName.Split(".")
 
 function ShowDiff($BaseFile, $DiffFile)
 {
-    $GitDiffExpression = "git diff $BaseFile $DiffFile"
+    $GitDiffExpression = "git diff --no-index $BaseFile $DiffFile"
 
     if ($WordDiff)
     {
@@ -50,9 +50,11 @@ $ShowDiff = !$Log -and !$Asm
 
 Write-Verbose "Current directory name is: '$CurrentDirName'"
 
-if (!$CurrentDir.Contains("spmi") -or !@("asm", "repro").Contains($CurrentDirParts[0]))
+$IsSpmiDir = $CurrentDir.Contains("spmi") -and @("asm", "repro").Contains($CurrentDirParts[0])
+$IsWasmJitDiffDir = $CurrentDir.Contains("wasmjit-diff")
+if (!$IsSpmiDir -and !$IsWasmJitDiffDir)
 {
-    Write-Error "Must be in the SPMI results directory to obtain diffs!"
+    Write-Error "Must be in the SPMI/wasmjit-diff results directory to obtain diffs!"
     return
 }
 

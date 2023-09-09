@@ -103,7 +103,6 @@
 -r:"System.DirectoryServices.dll"
 -r:"System.DirectoryServices.Protocols.dll"
 -r:"System.dll"
--r:"System.Drawing.Common.dll"
 -r:"System.Drawing.dll"
 -r:"System.Drawing.Primitives.dll"
 -r:"System.Dynamic.Runtime.dll"

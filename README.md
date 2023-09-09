@@ -146,6 +146,7 @@ Parameters:
 6) `basediffs`: whether to use the "base" Jit for the diff.
 7) Path to a `.dll` file: the PIN tool library to use for the diffs. Useful for testing in-development PIN tools.
 8) `trace`: whether to use the "trace" mode of the PIN tool. Traces will be saved to `diffs/basetp.txt` and `diffs/difftp.txt` and analyzed with `analyze-pin-trace-diff.ps1`.
+9) `tracediff`: same as `trace`, but only instrument the "diff" Jit and use results from `diffs/basetp.txt` as the base.
 
 #### `analyze-pin-trace-diff.ps1` - diff the traces produced by the PIN tool
 
@@ -223,7 +224,7 @@ Ordinarily, invoking `superpmy.py`, especially in cross-targeting and filtering 
 Note the somewhat inordinate way in which the script takes arguments: they are all positional, and must be in strict order (defined below), except if the effective values used are the same as default ones. This means that, e. g., both `spmi win-x64 bench` and `spmi bench` are legal, but `spmi bench win-x64` is not.
 
 Parameters:
-1) Action: one of `replay`, `asmdiffs`, `basediffs` and `redownload`. `basediffs` is the same as `asmdiffs`, except that it uses the "base" Jits. The default is `asmdiffs`.
+1) Action: one of `replay`, `asmdiffs`, `basediffs`, `perfdiffs` (PerfScore diffs), `perfbasediffs` and `redownload`. `basediffs` and `perfbasediffs` are the same as `asmdiffs` and `perfdiffs`, respectively, except that they use the "base" Jits. The default is `asmdiffs`.
 2) Target RID and host arch: the defaults are `win-x64` and `x64`. Like `diff-mem.ps1` and `diff-dasm.ps1`, `spmi.ps1` will prefer to use the `x86`-hosted compilers for `x86` and `ARM` diffs.
 3) Collection: one of `aspnet`, `bench`, `clrtests`, `cglibs`, `libs` or `libstests`. While replay and asmdiffs only support specifiying one collection, or none, in which case all are used, the `redownload` action supports a whitespace-separated list of them.
 4) Jit options: `b:JitOption=Value` if the option should apply only the the base compiler, `d:JitOption=Value` for the opposite, and simply `JitOption=Value` if it should apply to both.

@@ -81,7 +81,7 @@ foreach ($Arch in $Arches)
     if ($RegenerateDiff)
     {
         Invoke-Expression "$BuildScript clr -c Checked -a $Arch"
-        Invoke-Expression "$BuildScript clr -c Debug -a $Arch"
+        Invoke-Expression "$BuildScript clr.alljits -c Debug -a $Arch"
         Invoke-Expression "$BuildScript clr -c Release -a $Arch"
         Invoke-Expression "$BuildScript libs -c Release -a $Arch"
 
@@ -94,13 +94,11 @@ foreach ($Arch in $Arches)
     {
         # We define NoPgoOptimize=true for the Release builds as we want to use them for PIN diffs
         Invoke-Expression "$BaseBuildScript clr -c Checked -a $Arch"
-        Invoke-Expression "$BaseBuildScript clr -c Debug -a $Arch"
         Invoke-Expression "$BaseBuildScript clr -c Release -a $Arch /p:NoPgoOptimize=true"
+        Invoke-Expression "$BaseBuildScript libs -c Release -a $Arch"
         ./build-jit-with-stats-defined.ps1 -Base -Save -JitSubset "clr.alljits" -Arch $Arch -Config "Release" -Stats "mem"
 
-        Invoke-Expression "$BaseBuildScript libs -c Release -a $Arch"
         Invoke-Expression "$BaseRuntimePath\src\tests\build.cmd checked generatelayoutonly $Arch"
-        Invoke-Expression "$BaseRuntimePath\src\tests\build.cmd debug generatelayoutonly $Arch"
         Invoke-Expression "$BaseRuntimePath\src\tests\build.cmd release generatelayoutonly $Arch"
     }
 

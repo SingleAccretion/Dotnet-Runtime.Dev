@@ -11,7 +11,7 @@ for ($i = 0; $i -lt $ArgsLength; $i++)
 
 $i = 0
 $Action = "asmdiffs"
-if ($i -le $ArgsLength -and @("replay","asmdiffs","basediffs","redownload").Contains($Args[$i]))
+if ($i -le $ArgsLength -and @("replay","asmdiffs","basediffs","perfdiffs","perfbasediffs","redownload").Contains($Args[$i]))
 {
     $Action = $Args[$i]
     $i++
@@ -45,7 +45,9 @@ $HostArch, $TargetOS, $TargetArch, $JitName = & $PSScriptRoot/../scripts/arch-se
 
 $SpmiCollectionsToFiltersMap = [ordered]@{
     "aspnet" = "aspnet";
-    "bench" = "benchmarks.run";
+    "bench" = "benchmarks.run.";
+    "pgobench" = "benchmarks.run_pgo";
+    "tierbench" = "benchmarks.run_tiered";
     "clrtests" = "coreclr_tests";
     "cglibs" = "libraries.crossgen2";
     "libs" = "libraries.pmi";
@@ -122,19 +124,37 @@ if ($Action -eq "redownload")
 else
 {
     $JitNameOption = "-jit_name $JitName"
+    $MetricsOption = ""
     $BaseJitOption = ""
     $HostArchOption = ""
     $FilterOption = ""
     $JitOptionsOption = ""
 
+    $IsBaseDiffsAction = $false
     if ($Action -eq "basediffs")
     {
+        $IsBaseDiffsAction = $true
+        $Action = "asmdiffs"
+    }
+    elseif ($Action -eq "perfbasediffs")
+    {
+        $IsBaseDiffsAction = $true
+        $Action = "perfdiffs"
+    }
+
+    if ($Action -ne "replay")
+    {
         $SpmiAction = "asmdiffs"
+
+        if ($Action -eq "perfdiffs")
+        {
+            $MetricsOption = "-metrics PerfScore"
+        }
     }
 
     if ($SpmiAction -eq "asmdiffs")
     {
-        if ($Action -eq "basediffs")
+        if ($IsBaseDiffsAction)
         {
             $SavedJitsPath = . $PSScriptRoot/../scripts/saved-jits.ps1 $HostArch "Checked"
             $BaseJitPath = Join-Path $SavedJitsPath $JitName
@@ -185,5 +205,5 @@ else
         $FilterOption = "-filter $($SpmiCollectionsToFiltersMap[$SpmiCollections[0]])"
     }
 
-    RunSpmiScript "$HostArchOption $JitNameOption $FilterOption $BaseJitOption $JitOptionsOption".Trim().Replace("  ", " ")
+    RunSpmiScript "$HostArchOption $JitNameOption $FilterOption $MetricsOption $BaseJitOption $JitOptionsOption".Trim().Replace("  ", " ")
 }
