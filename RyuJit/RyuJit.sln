@@ -57,7 +57,7 @@ Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "crossgen2", "..\runtime-bas
 		Executable = C:\Users\Accretion\source\dotnet\build\crossgen2\corerun.exe
 		RemoteMachine = DESKTOP-C4G8F81
 		StartingDirectory = C:\Users\Accretion\source\dotnet\build\crossgen2
-		Arguments = crossgen2.dll @cg2.rsp --codegenopt NgenDump=*
+		Arguments = crossgen2.dll @cg2.rsp --codegenopt JitDump=*
 		Environment = core_root=C:\Users\Accretion\source\dotnet\build\crossgen2	dotnet_jitname=cg2jit.dll	
 		LaunchingEngine = e55ccc87-77c9-4222-8310-09f38e24c40f
 		UseLegacyDebugEngines = No
@@ -102,7 +102,7 @@ Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "llvm-ilc", "..\runtimelab\a
 		Executable = C:\Users\Accretion\source\dotnet\runtimelab\artifacts\bin\coreclr\windows.x64.Debug\ilc\ilc.exe
 		RemoteMachine = DESKTOP-C4G8F81
 		StartingDirectory = C:\Users\Accretion\source\dotnet\build\llvm-ilc
-		Arguments = @llvm-ilc.rsp --codegenopt NgenDump=* --targetarch:wasm --targetos:wasm
+		Arguments = @llvm-ilc.rsp --targetarch:wasm --targetos:browser --codegenopt:JitDump=* -O
 		Environment = Default
 		LaunchingEngine = 3b476d35-a401-11d2-aad4-00c04f990171
 		UseLegacyDebugEngines = No
