@@ -1,0 +1,1 @@
+(ls $Args[0]).LastWriteTime = Get-Date

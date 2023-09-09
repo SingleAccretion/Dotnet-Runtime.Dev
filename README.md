@@ -237,3 +237,7 @@ Parameters:
 1) `-download`: the build ID to use when downloading the diffs (as with `fmt.ps1`, this can be obtained from the AzDo URL).
 2) `-zipFile`: the path to an existing ZIP file to unpack. This option is meant to be used when the diffs file has already been downloaded.
 3) `-arch`: the host architecture of the SPMI job, `x86` or `x64`. Default is `x64`.
+
+#### `touch.ps1` - update the timestamp on a file
+
+This script works similarly to the "touch" Unix utility, except it does not create the file if it does not exit. This script is useful for working around MSBuild incrementality limitations: "touch" the project file before invoking `dotnet build` to have it be fully rebuilt.
